@@ -1,14 +1,36 @@
-# astrbot-plugin-helloworld
+# astrbot_plugin_tool_context
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+工具调用日志归档与上下文优化插件，适用于 AstrBot。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+[English](README.en.md)
 
-# Supports
+## 当前状态
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+开发中。已实现本地核心：按会话追加 JSONL 原始记录、独立 provider 摘要适配器、请求副本中的文本结果替换、持久摘要复用及按会话回读。9 项离线测试通过，使用临时文件和模拟 provider，没有调用真实付费 API。
+
+尚未接入 AstrBot 实际请求循环，插件入口仍只有注册骨架。安装后不会自动清洗上下文，也没有对模型开放日志回读工具。尚未完成运行环境验证。
+
+## 目标
+
+不改变 agent 原有工具调用方式，自动将完整工具参数与结果追加归档，再通过独立 API 生成简短英文操作描述，在后续模型请求中替换不再需要的冗长工具记录。
+
+仅处理工具操作上下文，不摘要普通聊天，不修改人格或长期记忆，不替 agent 对外发言。
+
+## 设计约束
+
+- 原始日志与模型请求视图分离，摘要不覆盖原文。
+- 先可靠归档再替换；归档或摘要失败时保留原结果。
+- 保留工具调用配对、错误、未知结果及必要产物位置。
+- 读取文件、代码与搜索等结果不能在 agent 首次读取前被无条件清除。
+- 不使用全局 monkey patch 接管 provider。
+- 日志可能包含敏感数据；存储、访问隔离与发送到摘要 API 的范围需要明确控制。
+
+## 接入状态
+
+正在评估 AstrBot 每次模型请求前的投影接缝。现有工具返回事件不等于可安全替换当前工具循环的模型输入，不能仅依赖该事件宣称完整功能已实现。
+
+近期实现范围以工具文本结果为主；图片、签名思考及后台任务状态回执的处理尚未实现。
+
+## 参考
+
+参考 LangChain Deep Agents 的日志外置和请求摘要机制，不迁移其整套 agent 框架。当前仓库尚未引入该项目源码；如后续复制实质代码，将保留其 MIT 版权与许可声明。
