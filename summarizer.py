@@ -13,14 +13,18 @@ INSTRUCTION = (
 
 
 class ProviderSummarizer:
-    def __init__(self, provider, *, max_chars: int = 600):
+    def __init__(self, provider, *, model: str | None = None, max_chars: int = 600):
         self.provider = provider
+        self.model = model
         self.max_chars = max_chars
 
     async def __call__(self, payload: dict) -> str:
-        response = await self.provider.text_chat(
-            system_prompt=INSTRUCTION + f" Maximum output length: {self.max_chars} characters.",
-            prompt=json.dumps(payload, ensure_ascii=False, allow_nan=False),
-            contexts=[],
-        )
+        request = {
+            "system_prompt": INSTRUCTION + f" Maximum output length: {self.max_chars} characters.",
+            "prompt": json.dumps(payload, ensure_ascii=False, allow_nan=False),
+            "contexts": [],
+        }
+        if self.model:
+            request["model"] = self.model
+        response = await self.provider.text_chat(**request)
         return response.completion_text or ""
